@@ -1,0 +1,29 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.log
+
+# Rider / IntelliJ
+.idea/
+
+# Entity Framework migrations backup
+*.bak
+
+# Publish output
+publish/
+out/
+
+# Sensitive config (use appsettings.Development.json para senhas locais)
+# appsettings.json  ← descomente se quiser ignorar
+
+# Angular
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# OS
+.DS_Store
+Thumbs.db
