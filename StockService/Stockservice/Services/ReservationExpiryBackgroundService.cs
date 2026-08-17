@@ -26,7 +26,7 @@ public class ReservationExpiryBackgroundService : BackgroundService
             }
             catch
             {
-                // Background job should not crash the application if a reservation expiration fails.
+                // tratar exceção, logar, etc.
             }
 
             await Task.Delay(_interval, stoppingToken);
