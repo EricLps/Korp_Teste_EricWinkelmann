@@ -1,7 +1,13 @@
 using System.ComponentModel.DataAnnotations;
-using BillingService.Enums;
 
 namespace BillingService.Models;
+
+public enum InvoiceStatus
+{
+    Open,
+    Closed,
+    Expired
+}
 
 public class Invoice
 {

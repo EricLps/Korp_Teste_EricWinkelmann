@@ -1,4 +1,5 @@
 using BillingService.Data;
+using BillingService.Repositories;
 using BillingService.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,7 +19,8 @@ builder.Services.AddHttpClient<StockHttpClient>((sp, client) =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
-builder.Services.AddScoped<StockHttpClient>();
+builder.Services.AddScoped<InvoiceRepository>();
+builder.Services.AddScoped<InvoiceService>();
 
 var app = builder.Build();
 
