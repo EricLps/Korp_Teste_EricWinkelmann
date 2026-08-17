@@ -21,6 +21,7 @@ builder.Services.AddHttpClient<StockHttpClient>((sp, client) =>
 
 builder.Services.AddScoped<InvoiceRepository>();
 builder.Services.AddScoped<InvoiceService>();
+builder.Services.AddHostedService<InvoiceExpiryBackgroundService>();
 
 var app = builder.Build();
 

@@ -6,7 +6,7 @@ namespace BillingService.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class InvoicesController : ControllerBase
+public partial class InvoicesController : ControllerBase
 {
     private readonly InvoiceService _invoiceService;
 

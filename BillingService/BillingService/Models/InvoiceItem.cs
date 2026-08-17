@@ -10,6 +10,9 @@ public class InvoiceItem
 
     public Guid ProductId { get; set; }
 
+    // reservationid do stock service
+    public Guid ReservationId { get; set; }
+
     [Required]
     public string ProductName { get; set; } = string.Empty;
 
@@ -17,4 +20,5 @@ public class InvoiceItem
     public int Quantity { get; set; }
 
     public Invoice Invoice { get; set; } = null!;
+
 }

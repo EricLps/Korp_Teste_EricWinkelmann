@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BillingService.Services;
 
-public class InvoiceService
+public partial class InvoiceService
 {
     private readonly InvoiceRepository _repository;
     private readonly StockHttpClient _stockHttpClient;
@@ -56,7 +56,7 @@ public class InvoiceService
             Items = new List<InvoiceItem>()
         };
 
-        var reservedItems = new List<(Guid ProductId, Guid ReservationId)>();
+        var reservedMap = new Dictionary<Guid, Guid>();
 
         try
         {
@@ -78,7 +78,7 @@ public class InvoiceService
                     throw new InvalidOperationException("Resposta inválida do serviço de estoque.");
                 }
 
-                reservedItems.Add((item.ProductId, reservation.ReservationId));
+                        reservedMap[item.ProductId] = reservation.ReservationId;
             }
 
             foreach (var item in request.Items)
@@ -88,31 +88,33 @@ public class InvoiceService
                     Id = Guid.NewGuid(),
                     InvoiceId = invoice.Id,
                     ProductId = item.ProductId,
-                    ProductName = item.ProductName.Trim(),
-                    Quantity = item.Quantity,
-                    Invoice = invoice
-                });
-            }
+                            ReservationId = reservedMap.ContainsKey(item.ProductId) ? reservedMap[item.ProductId] : Guid.Empty,
+                            ProductName = item.ProductName.Trim(),
+                            Quantity = item.Quantity,
+                            Invoice = invoice
+                        });
+                    }
 
-            await _repository.AddAsync(invoice);
-            return MapToDto(invoice);
-        }
+                    await _repository.AddAsync(invoice);
+                    return MapToDto(invoice);
+                }
         catch
         {
-            foreach (var reserved in reservedItems)
+            // besteffort rollback: tenta cancelar reservas feitas antes de falhar
+            foreach (var kv in reservedMap)
             {
                 try
                 {
-                    var cancelPayload = new { ReservationId = reserved.Item2 };
-                    var cancelResponse = await _stockHttpClient.CancelReservationAsync(reserved.Item1, cancelPayload);
+                    var cancelPayload = new { ReservationId = kv.Value };
+                    var cancelResponse = await _stockHttpClient.CancelReservationAsync(kv.Key, cancelPayload);
                     if (!cancelResponse.IsSuccessStatusCode)
                     {
-                        // keep best-effort rollback only
+                        // mantem o best-effort rollback apenas, nao lanca excecao
                     }
                 }
                 catch
                 {
-                    // keep best-effort rollback only
+                    //mantem o best-effort rollback apenas
                 }
             }
 
@@ -133,9 +135,24 @@ public class InvoiceService
             {
                 Id = item.Id,
                 ProductId = item.ProductId,
-                ProductName = item.ProductName,
-                Quantity = item.Quantity
-            }).ToList()
+                            ReservationId = item.ReservationId,
+                            ProductName = item.ProductName,
+                            Quantity = item.Quantity
+                        }).ToList()
         };
+    public async Task CancelExpiredInvoicesAsync()
+    {
+        var now = DateTime.UtcNow;
+        var expiredInvoices = await _repository.GetExpiredInvoicesAsync(now);
+
+        foreach (var invoice in expiredInvoices)
+        {
+            invoice.Status = InvoiceStatus.Expired;
+        }
+
+        if (expiredInvoices.Count > 0)
+        {
+            await _repository.SaveChangesAsync();
+        }
     }
 }

@@ -33,6 +33,14 @@ public class InvoiceRepository
         await _context.Invoices.AddAsync(invoice);
         await _context.SaveChangesAsync();
     }
+    
+    public async Task<List<Invoice>> GetExpiredInvoicesAsync(DateTime now)
+    {
+        return await _context.Invoices
+            .Include(invoice => invoice.Items)
+            .Where(invoice => invoice.Status == InvoiceStatus.Open && invoice.ExpiresAt <= now)
+            .ToListAsync();
+    }
 
     public async Task SaveChangesAsync()
     {
