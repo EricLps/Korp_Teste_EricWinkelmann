@@ -1,0 +1,88 @@
+<div class="invoices-container">
+  <h2>Emitir Nota Fiscal</h2>
+
+  <form [formGroup]="invoiceForm" (ngSubmit)="addItem()" class="invoice-form">
+    <mat-form-field appearance="outline" class="id-field">
+      <mat-label>Produto</mat-label>
+      <mat-select formControlName="productId">
+        <mat-option *ngFor="let prod of products" [value]="prod.id" [disabled]="getRemainingBalance(prod) <= 0">
+          {{prod.code}} - {{prod.description}} (Saldo: {{getRemainingBalance(prod)}})
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Quantidade</mat-label>
+      <input matInput formControlName="quantity">
+    </mat-form-field>
+
+    <button mat-raised-button color="primary" type="submit" [disabled]="invoiceForm.invalid">
+      ADICIONAR ITEM
+    </button>
+  </form>
+
+  <!-- Lista Intermediária -->
+  <div class="selected-items-section" *ngIf="selectedItems.length > 0">
+    <h3>Itens da Nota Atual:</h3>
+
+    <div class="items-list">
+      <div class="item-row" *ngFor="let item of selectedItems; let i = index">
+        <span>{{item.quantity}}x {{item.productName}}</span>
+        <button mat-button color="warn" (click)="removeItem(i)">Remover</button>
+      </div>
+    </div>
+
+    <div class="submit-action">
+      <button mat-raised-button color="primary" (click)="submitInvoice()" [disabled]="isLoading">
+        EMITIR NOTA FISCAL ({{selectedItems.length}} itens)
+      </button>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <h2>Notas Fiscais Emitidas</h2>
+
+  <table mat-table [dataSource]="invoices" class="mat-elevation-z2">
+    <!-- coluna de quantidade -->
+    <ng-container matColumnDef="number">
+      <th mat-header-cell *matHeaderCellDef> Número </th>
+      <td mat-cell *matCellDef="let element"> {{element.number || 'N/A'}} </td>
+    </ng-container>
+
+    <!-- coluna da data de criacao -->
+    <ng-container matColumnDef="createdAt">
+      <th mat-header-cell *matHeaderCellDef> Data de Criação </th>
+      <td mat-cell *matCellDef="let element"> {{element.createdAt | date:'short'}} </td>
+    </ng-container>
+
+    <!-- coluna de status -->
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef> Status </th>
+      <td mat-cell *matCellDef="let element">
+        <span class="status-badge" [ngClass]="element.status.toLowerCase()">
+          {{element.status}}
+        </span>
+      </td>
+    </ng-container>
+
+    <!-- Items Column -->
+    <ng-container matColumnDef="items">
+      <th mat-header-cell *matHeaderCellDef> Itens </th>
+      <td mat-cell *matCellDef="let element">
+        <div class="items-cell">
+          <div *ngFor="let item of element.items">
+            {{item.quantity}}x {{item.productName || item.productId}}
+          </div>
+        </div>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  <div *ngIf="invoices.length === 0" class="empty-state">
+    Nenhuma nota fiscal emitida ainda.
+  </div>
+</div>

@@ -16,13 +16,14 @@ body {
   background-color: var(--korp-bg);
 }
 
-/* aplicando cores da korp */
+/* aplicando cores da korp na nav */
 .mat-toolbar.mat-primary {
   background-color: var(--korp-primary) !important;
   color: var(--korp-white-font-color) !important;
 }
 
-.mat-mdc-raised-button.mat-primary, .mdc-button--raised.mat-primary {
+/* mudanca dos botoes*/
+.mat-mdc-raised-button.mat-primary:not(:disabled), .mdc-button--raised.mat-primary:not(:disabled) {
   background-color: var(--korp-primary) !important;
   color: var(--korp-white-font-color) !important;
 }

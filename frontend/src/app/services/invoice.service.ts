@@ -1,24 +1,33 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
-export interface InvoiceItem { productId: string; productName: string; quantity: number }
-export interface Invoice { id: string; number: number; status: string; createdAt: string; expiresAt: string; items: InvoiceItem[] }
+export interface InvoiceItem { productId: string; productName?: string; quantity: number }
+export interface Invoice { 
+  id: string; 
+  number?: number; 
+  status: string; 
+  createdAt?: string; 
+  expiresAt?: string; 
+  items: InvoiceItem[] 
+}
 
 @Injectable({ providedIn: 'root' })
 export class InvoiceService {
-  private base = '/api/invoices';
+  private baseUrl = environment.billingApiUrl + '/api/invoices';
+  
   constructor(private http: HttpClient) {}
 
   list(): Observable<Invoice[]> {
-    return this.http.get<Invoice[]>(this.base);
+    return this.http.get<Invoice[]>(this.baseUrl);
   }
 
   create(payload: { items: InvoiceItem[] }) {
-    return this.http.post(this.base, payload);
+    return this.http.post<Invoice>(this.baseUrl, payload);
   }
 
   print(invoiceId: string) {
-    return this.http.post(`${this.base}/${invoiceId}/print`, {});
+    return this.http.post(`${this.baseUrl}/${invoiceId}/print`, {});
   }
 }

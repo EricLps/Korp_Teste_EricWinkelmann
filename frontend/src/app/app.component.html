@@ -1,4 +1,9 @@
-<mat-toolbar color="primary">Korp - Sistema de Notas Fiscais</mat-toolbar>
+<mat-toolbar color="primary">
+  <span>Korp - Sistema de Notas Fiscais</span>
+  <span class="spacer"></span>
+  <a mat-button routerLink="/">Produtos</a>
+  <a mat-button routerLink="/invoices">Notas Fiscais</a>
+</mat-toolbar>
 <div class="app-container">
   <router-outlet></router-outlet>
 </div>

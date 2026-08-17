@@ -140,6 +140,8 @@ public partial class InvoiceService
                             Quantity = item.Quantity
                         }).ToList()
         };
+    }
+
     public async Task CancelExpiredInvoicesAsync()
     {
         var now = DateTime.UtcNow;
