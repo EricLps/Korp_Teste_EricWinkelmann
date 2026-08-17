@@ -1,0 +1,28 @@
+/* You can add global styles to this file, and also import other style files */
+
+/* cores da korp[ */
+:root {
+  --korp-primary: #2b485a;
+  --korp-accent: #ff0c46;
+  --korp-bg: #f4f4f4;
+  --korp-white-font-color: #ffffff;
+  --korp-gray-font-color: #212121;
+}
+
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: var(--korp-bg);
+}
+
+/* aplicando cores da korp */
+.mat-toolbar.mat-primary {
+  background-color: var(--korp-primary) !important;
+  color: var(--korp-white-font-color) !important;
+}
+
+.mat-mdc-raised-button.mat-primary, .mdc-button--raised.mat-primary {
+  background-color: var(--korp-primary) !important;
+  color: var(--korp-white-font-color) !important;
+}
