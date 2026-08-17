@@ -85,6 +85,23 @@ public class ProductService
         {
             throw new InvalidOperationException("Saldo insuficiente para reservar este item.");
         }
+        
+        //se a requisicao for duplicada so devolve os dados da reserva que ja existe
+        var existingReservation = product.Reservations
+            .FirstOrDefault(r => r.InvoiceId == request.InvoiceId && r.Status == ReservationStatus.Active);
+            
+        if (existingReservation is not null)
+        {
+            return new ReservationResultDto
+            {
+                ProductId = product.Id,
+                ReservationId = existingReservation.Id,
+                InvoiceId = request.InvoiceId,
+                Quantity = existingReservation.Quantity,
+                ExpiresAt = existingReservation.ExpiresAt,
+                AvailableBalance = GetAvailableBalance(product, DateTime.UtcNow)
+            };
+        }
 
         var reservation = new StockReservation
         {

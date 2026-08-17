@@ -63,7 +63,15 @@ public partial class InvoiceService
             foreach (var item in request.Items)
             {
                 var reservePayload = new { InvoiceId = invoice.Id, Quantity = item.Quantity };
-                var response = await _stockHttpClient.ReserveAsync(item.ProductId, reservePayload);
+                HttpResponseMessage response;
+                try
+                {
+                    response = await _stockHttpClient.ReserveAsync(item.ProductId, reservePayload);
+                }
+                catch (HttpRequestException)
+                {
+                    throw new InvalidOperationException("Serviço de estoque indisponível. Tente novamente.");
+                }
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -156,5 +164,44 @@ public partial class InvoiceService
         {
             await _repository.SaveChangesAsync();
         }
+    }
+
+    public async Task PrintInvoiceAsync(Guid invoiceId)
+    {
+        var invoice = await _repository.GetByIdAsync(invoiceId);
+        if (invoice == null)
+            throw new KeyNotFoundException("Nota fiscal não encontrada.");
+
+        if (invoice.Status != InvoiceStatus.Open)
+            throw new InvalidOperationException("Apenas notas com status OPEN podem ser impressas.");
+
+        if (invoice.ExpiresAt < DateTime.UtcNow)
+            throw new InvalidOperationException("A nota fiscal expirou.");
+
+        // Simula o tempo de impressao/processamento de fila (10 segundos)
+        await Task.Delay(10000);
+
+        // Confirma as reservas no StockService
+        foreach (var item in invoice.Items)
+        {
+            var confirmPayload = new { ReservationId = item.ReservationId };
+            HttpResponseMessage response;
+            try
+            {
+                response = await _stockHttpClient.ConfirmReservationAsync(item.ProductId, confirmPayload);
+            }
+            catch (HttpRequestException)
+            {
+                throw new InvalidOperationException("Serviço de estoque indisponível. Tente novamente.");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // Tratar falha de confirmacao se necessario
+            }
+        }
+
+        invoice.Status = InvoiceStatus.Closed;
+        await _repository.SaveChangesAsync();
     }
 }

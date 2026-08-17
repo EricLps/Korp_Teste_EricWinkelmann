@@ -9,7 +9,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSelectModule } from '@angular/material/select';
-import { catchError, finalize } from 'rxjs/operators';
+import { MatIconModule } from '@angular/material/icon';
+import { catchError, finalize, delay } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { ProductService, Product } from '../services/product.service';
 
@@ -25,6 +26,7 @@ import { ProductService, Product } from '../services/product.service';
     MatButtonModule,
     MatSnackBarModule,
     MatSelectModule,
+    MatIconModule,
     DatePipe
   ],
   templateUrl: './invoices.component.html',
@@ -33,13 +35,15 @@ import { ProductService, Product } from '../services/product.service';
 export class InvoicesComponent implements OnInit {
   invoices: Invoice[] = [];
   products: Product[] = [];
-  displayedColumns: string[] = ['number', 'createdAt', 'status', 'items'];
+  displayedColumns: string[] = ['number', 'createdAt', 'status', 'items', 'actions'];
 
   invoiceForm: FormGroup;
   isLoading = false;
 
   // Lista temporária de itens da nota
   selectedItems: { productId: string; productName: string; quantity: number }[] = [];
+
+  printingIds: Set<string> = new Set<string>();
 
   constructor(
     private fb: FormBuilder,
@@ -70,7 +74,7 @@ export class InvoicesComponent implements OnInit {
     });
   }
 
-  addItem() {
+  addItem(formDirective: any) {
     if (this.invoiceForm.invalid) return;
 
     const formValue = this.invoiceForm.value;
@@ -90,7 +94,7 @@ export class InvoicesComponent implements OnInit {
       }
 
       if (existingItemIndex >= 0) {
-        // Se já existe, só incrementa a quantidade pra não criar uma linha nova
+        // Se já existe, só incrementa a quantidade pra não criar uma linha nova e duplicada
         this.selectedItems[existingItemIndex].quantity += qtyToAdd;
       } else {
         // Cria uma nova linha
@@ -101,11 +105,14 @@ export class InvoicesComponent implements OnInit {
         });
       }
 
+      // Limpa o formulário inteiro após adicionar e reseta o estado de submissão
+      formDirective.resetForm();
       this.invoiceForm.reset();
     }
   }
 
   getRemainingBalance(product: Product): number {
+    //calculo do saldo de produtos sem alterar a lista original da api
     const cartItem = this.selectedItems.find(i => i.productId === product.id);
     const cartQty = cartItem ? cartItem.quantity : 0;
     return (product.availableBalance || 0) - cartQty;
@@ -120,6 +127,7 @@ export class InvoicesComponent implements OnInit {
 
     this.isLoading = true;
 
+    //mapeamento do carrinho pro formato que o DTO espera
     const payload = {
       items: this.selectedItems.map(item => ({
         productId: item.productId,
@@ -143,6 +151,25 @@ export class InvoicesComponent implements OnInit {
         this.snackBar.open('Nota Fiscal emitida com sucesso!', 'OK', { duration: 3000 });
         this.selectedItems = [];
         this.loadInvoices();
+      }
+    });
+  }
+
+  printInvoice(invoiceId: string) {
+    // evita double click
+    if (this.printingIds.has(invoiceId)) return;
+
+    this.printingIds.add(invoiceId);
+    this.snackBar.open('Impressão solicitada! Aguarde cerca de 10 segundos...', 'OK', { duration: 5000 });
+    this.invoiceService.print(invoiceId).pipe(
+      finalize(() => this.printingIds.delete(invoiceId))
+    ).subscribe({
+      next: () => {
+        this.snackBar.open('Impressão concluída com sucesso!', 'OK', { duration: 4000 });
+        this.loadInvoices(); // atualiza a tabela e o status pra "completed"
+      },
+      error: () => {
+        this.snackBar.open('Falha ao tentar imprimir a nota.', 'Fechar', { duration: 5000 });
       }
     });
   }

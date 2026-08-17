@@ -1,7 +1,7 @@
 <div class="products-container">
   <h2>Cadastro de Produto</h2>
 
-  <form [formGroup]="productForm" (ngSubmit)="createProduct()" class="product-form">
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit(formDirective)" #formDirective="ngForm" class="product-form">
     <mat-form-field appearance="outline">
       <mat-label>Código</mat-label>
       <input matInput formControlName="code" placeholder="Ex: PROD-001">

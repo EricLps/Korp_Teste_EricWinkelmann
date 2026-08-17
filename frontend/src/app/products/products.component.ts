@@ -8,7 +8,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { catchError, finalize } from 'rxjs/operators';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { catchError, finalize, delay } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 @Component({
@@ -55,28 +56,29 @@ export class ProductsComponent implements OnInit {
     });
   }
 
-  createProduct() {
+  onSubmit(formDirective: any) {
     if (this.productForm.invalid) return;
 
     this.isLoading = true;
-    const formValue = this.productForm.value;
-
-    this.productService.create(formValue).pipe(
-      catchError(err => {
-        let msg = 'Erro ao cadastrar produto.';
-        if (err.error && err.error.detail) {
-          msg = err.error.detail;
+    this.productService.create(this.productForm.value)
+      .pipe(
+        catchError(err => {
+          let msg = 'Erro ao salvar produto.';
+          if (err.error && err.error.detail) {
+            msg = err.error.detail;
+          }
+          this.snackBar.open(msg, 'Fechar', { duration: 5000 });
+          return of(null);
+        }),
+        finalize(() => this.isLoading = false)
+      )
+      .subscribe(result => {
+        if (result) {
+          this.snackBar.open('Produto cadastrado com sucesso!', 'OK', { duration: 3000 });
+          formDirective.resetForm();
+          this.productForm.reset();
+          this.loadProducts();
         }
-        this.snackBar.open(msg, 'Fechar', { duration: 5000 });
-        return of(null);
-      }),
-      finalize(() => this.isLoading = false)
-    ).subscribe(result => {
-      if (result) {
-        this.snackBar.open('Produto cadastrado com sucesso!', 'OK', { duration: 3000 });
-        this.productForm.reset();
-        this.loadProducts();
-      }
-    });
+      });
   }
 }

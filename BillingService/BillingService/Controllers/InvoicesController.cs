@@ -51,4 +51,31 @@ public partial class InvoicesController : ControllerBase
             return Problem(title: "Erro ao criar nota fiscal", detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError);
         }
     }
+
+    [HttpPost("{id}/print")]
+    public async Task<IActionResult> PrintInvoice(Guid id)
+    {
+        try
+        {
+            await _invoiceService.PrintInvoiceAsync(id);
+            return Ok();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Impressão não permitida",
+                Detail = ex.Message,
+                Status = StatusCodes.Status400BadRequest
+            });
+        }
+        catch (Exception ex)
+        {
+            return Problem(title: "Erro ao imprimir nota fiscal", detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError);
+        }
+    }
 }

@@ -14,6 +14,7 @@ public class Product
     [StringLength(250)]
     public string Description { get; set; } = string.Empty;
 
+    [ConcurrencyCheck]
     public int Balance { get; set; }
 
     public ICollection<StockReservation> Reservations { get; set; } = new List<StockReservation>();
